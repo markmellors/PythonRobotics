@@ -11,15 +11,43 @@ import math
 import matplotlib.pyplot as plt
 
 
-k = 0.1  # look forward gain
-Lfc = 2.0  # look-ahead distance
-Kp = 1.0  # speed proportional gain
-dt = 0.1  # [s]
-L = 2.9  # [m] wheel base of vehicle
+k = 0  # look forward gain
+Lfc = 0.3  # look-ahead distance
+Kp = 7  # speed proportional gain
+dt = 0.05  # [s]
+L = 0.1  # [m] wheel base of vehicle
 
 
 show_animation = True
 
+
+blindMaze = [[0.0, 0.0],
+             [0.0, 0.3],
+             [0.0, 0.6],
+             [0.0, 0.9],
+             [0.0, 1.1],
+             [0.3, 1.1],
+             [0.5, 1.1],
+             [0.7, 1.1],
+             [1.0, 1.1],
+             [1.1, 1.0],
+             [1, 0.8],
+             [1, 0.5],
+             [1, 0.2],
+             [1.1, 0.1],
+             [1.3, 0.2],
+             [1.6, 0.2],
+             [2, 0.2],
+             [2.1, 0.3],
+             [2, 0.5],
+             [2, 0.8],
+             [2, 1.1],
+             [2.1, 1.2],
+             [2.3, 1.1],
+             [2.6, 1.1],
+             [2.9, 1.1],
+             [3.2, 1.1],
+             [3.6, 1.1]]
 
 class State:
 
@@ -91,6 +119,7 @@ class Trajectory:
                 ind = ind + 1 if (ind + 1) < len(self.cx) else ind
                 distance_next_index = state.calc_distance(self.cx[ind], self.cy[ind])
                 if distance_this_index < distance_next_index:
+                    ind = ind-1
                     break
                 distance_this_index = distance_next_index
             self.old_nearest_point_index = ind
@@ -103,7 +132,6 @@ class Trajectory:
         while Lf > L and (ind + 1) < len(self.cx):
             L = state.calc_distance(self.cx[ind], self.cy[ind])
             ind += 1
-
         return ind
 
 
@@ -130,8 +158,18 @@ def pure_pursuit_control(state, trajectory, pind):
 
     return delta, ind
 
+def addArena():
+    addRect(-0.25, -0.25, 3, 1.8)
+    addRect(0.25, -0.25, 0.5, 1)
+    addRect(1.25, 0.55, 0.5, 1)
+    addRect(2.25, -0.25, 0.5, 1)
 
-def plot_arrow(x, y, yaw, length=1.0, width=0.5, fc="r", ec="k"):
+def addRect(x, y, w, h):
+    p = plt.Rectangle((x,y),w,h,fill=False)
+    ax = plt.gca()
+    ax.add_patch(p)
+
+def plot_arrow(x, y, yaw, length=0.1, width=0.05, fc="r", ec="k"):
     """
     Plot arrow
     """
@@ -147,15 +185,15 @@ def plot_arrow(x, y, yaw, length=1.0, width=0.5, fc="r", ec="k"):
 
 def main():
     #  target course
-    cx = np.arange(0, 50, 0.1)
-    cy = [math.sin(ix / 5.0) * ix / 2.0 for ix in cx]
+    cx = [row[0] for row in blindMaze]
+    cy = [row[1] for row in blindMaze]
 
-    target_speed = 10.0 / 3.6  # [m/s]
+    target_speed = 2  # [m/s]
 
     T = 100.0  # max simulation time
 
     # initial state
-    state = State(x=-0.0, y=-3.0, yaw=0.0, v=0.0)
+    state = State(x=-0.0, y=0, yaw=1.57, v=0.0)
 
     lastIndex = len(cx) - 1
     time = 0.0
@@ -171,12 +209,12 @@ def main():
 
         time += dt
         states.append(time, state)
-
         if show_animation:  # pragma: no cover
             plt.cla()
             # for stopping simulation with the esc key.
             plt.gcf().canvas.mpl_connect('key_release_event',
                     lambda event: [exit(0) if event.key == 'escape' else None])
+            addArena()
             plot_arrow(state.x, state.y, state.yaw)
             plt.plot(cx, cy, "-r", label="course")
             plt.plot(states.x, states.y, "-b", label="trajectory")
@@ -191,19 +229,20 @@ def main():
 
     if show_animation:  # pragma: no cover
         plt.cla()
+        addArena()
         plt.plot(cx, cy, ".r", label="course")
-        plt.plot(states.x, states.y, "-b", label="trajectory")
+        plt.plot(states.x, states.y, "--b", label="trajectory")
         plt.legend()
         plt.xlabel("x[m]")
         plt.ylabel("y[m]")
         plt.axis("equal")
         plt.grid(True)
 
-        plt.subplots(1)
-        plt.plot(states.t, [iv * 3.6 for iv in states.v], "-r")
-        plt.xlabel("Time[s]")
-        plt.ylabel("Speed[km/h]")
-        plt.grid(True)
+        #plt.subplots(1)
+        #plt.plot(states.t, [iv * 3.6 for iv in states.v], "-r")
+        #plt.xlabel("Time[s]")
+        #plt.ylabel("Speed[km/h]")
+        #plt.grid(True)
         plt.show()
 
 
