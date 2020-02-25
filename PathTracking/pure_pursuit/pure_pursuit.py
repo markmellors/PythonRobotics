@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 
 k = 0  # look forward gain
-Lfc = 0.3  # look-ahead distance
+Lfc = 0.3  # look-ahead distance 
 Kp = 7  # speed proportional gain
 dt = 0.05  # [s]
 L = 0.1  # [m] wheel base of vehicle
@@ -48,6 +48,33 @@ blindMaze = [[0.0, 0.0],
              [2.9, 1.1],
              [3.2, 1.1],
              [3.6, 1.1]]
+
+lavaPalava = [[0.0, 0.0],
+             [0.0, 0.3],
+             [0.0, 0.6],
+             [0.0, 0.9],
+             [0.0, 1.2],
+             [0.0, 1.5],
+             [0.0, 1.8],
+             [0.0, 2.1],
+             [0.0, 2.5],
+             [0.28, 2.8],
+             [0.65, 3],
+             [0.68, 3.3],
+             [0.65, 3.6],
+             [0.65, 4],
+             [0.45, 4.2],
+             [0.05, 4.5],
+             [-0.1, 4.8],
+             [0.0, 5.1],
+             [0.0, 5.4],
+             [0.0, 5.7],
+             [0.0, 6],
+             [0.0, 6.3],
+             [0.0, 6.6],
+             [0.0, 6.9],
+             [0.0, 7.2],
+             [0.0, 7.5]]
 
 class State:
 
@@ -158,11 +185,16 @@ def pure_pursuit_control(state, trajectory, pind):
 
     return delta, ind
 
-def addArena():
+def addMaze():
     addRect(-0.25, -0.25, 3, 1.8)
     addRect(0.25, -0.25, 0.5, 1)
     addRect(1.25, 0.55, 0.5, 1)
     addRect(2.25, -0.25, 0.5, 1)
+
+def addLava():
+    coursex = [0.3, 0.3, 0.85, 0.85, 0.3, 0.3, -0.25, -0.25, 0.3, 0.3, -0.25, -0.25]
+    coursey = [7, 4.75, 4, 2.85, 2.3, 0, 0, 2.5, 3.05, 3.8, 4.55, 7]
+    plt.plot(coursex, coursey, "-k", label="course")
 
 def addRect(x, y, w, h):
     p = plt.Rectangle((x,y),w,h,fill=False)
@@ -185,8 +217,9 @@ def plot_arrow(x, y, yaw, length=0.1, width=0.05, fc="r", ec="k"):
 
 def main():
     #  target course
-    cx = [row[0] for row in blindMaze]
-    cy = [row[1] for row in blindMaze]
+    course=lavaPalava
+    cx = [row[0] for row in course]
+    cy = [row[1] for row in course]
 
     target_speed = 2  # [m/s]
 
@@ -214,9 +247,9 @@ def main():
             # for stopping simulation with the esc key.
             plt.gcf().canvas.mpl_connect('key_release_event',
                     lambda event: [exit(0) if event.key == 'escape' else None])
-            addArena()
+            addLava()
             plot_arrow(state.x, state.y, state.yaw)
-            plt.plot(cx, cy, "-r", label="course")
+            plt.plot(cx, cy, "-r", label="path")
             plt.plot(states.x, states.y, "-b", label="trajectory")
             plt.plot(cx[target_ind], cy[target_ind], "xg", label="target")
             plt.axis("equal")
@@ -229,7 +262,7 @@ def main():
 
     if show_animation:  # pragma: no cover
         plt.cla()
-        addArena()
+        addLava()
         plt.plot(cx, cy, ".r", label="course")
         plt.plot(states.x, states.y, "--b", label="trajectory")
         plt.legend()
